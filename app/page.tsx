@@ -1,95 +1,78 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+// app/page.tsx
+"use client";
 
-export default function Home() {
-  return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+import React, { useState, useEffect } from "react";
+import ImageGrid from "./components/organisms/ImageGrid";
+import SelectedImage from "./components/organisms/SelectedImage";
+import axios from "axios";
+import styles from "./styles/page.module.css";
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  );
+interface Image {
+  id: string;
+  urls: { small: string; full: string };
+  alt_description: string;
+  description?: string;
 }
+
+const HomePage: React.FC = () => {
+  const [images, setImages] = useState<Image[]>([]);
+  const [selectedImage, setSelectedImage] = useState<Image | null>(null);
+  const [relatedImages, setRelatedImages] = useState<Image[]>([]);
+  const [page, setPage] = useState(1); // 페이지 상태 추가
+  const [hasMore, setHasMore] = useState(true); // 더 불러올 이미지가 있는지 여부
+
+  useEffect(() => {
+    fetchImages();
+  }, []);
+
+  const fetchImages = async () => {
+    if (!hasMore) return; // 더 이상 불러올 이미지가 없으면 중단
+
+    try {
+      const response = await axios.get("/api/images", {
+        params: { page }, // 페이지 번호를 파라미터로 전달
+      });
+      if (response.data.length === 0) {
+        setHasMore(false); // 불러온 이미지가 없으면 더 이상 요청하지 않음
+      } else {
+        setImages((prevImages) => [...prevImages, ...response.data]);
+        setPage((prevPage) => prevPage + 1); // 페이지 번호 증가
+      }
+    } catch (error) {
+      console.error("Error fetching images:", error);
+      setHasMore(false); // 오류 발생 시 더 이상 요청하지 않음
+    }
+  };
+
+  const handleImageClick = async (image: Image) => {
+    setSelectedImage(image);
+    await fetchRelatedImages(image);
+  };
+
+  const fetchRelatedImages = async (image: Image) => {
+    try {
+      const response = await axios.get("/api/related-images", {
+        params: { query: image.alt_description },
+      });
+      setRelatedImages(response.data);
+    } catch (error) {
+      console.error("Error fetching related images:", error);
+    }
+  };
+
+  return (
+    <div className={styles.page}>
+      <h1>Image Gallery</h1>
+      {selectedImage && <SelectedImage image={selectedImage} />}
+      <ImageGrid
+        images={selectedImage ? relatedImages : images}
+        fetchMoreImages={fetchImages}
+        onClick={handleImageClick}
+        hasMore={hasMore} // hasMore 속성 추가
+      />
+      <div className={styles.loader}></div>
+    </div>
+  );
+};
+
+export default HomePage;
