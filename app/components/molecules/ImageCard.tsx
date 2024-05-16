@@ -1,6 +1,7 @@
 // app/components/molecules/ImageCard.tsx
 import React from "react";
 import Image from "next/image";
+
 import styles from "../styles/ImageCard.module.css";
 
 interface ImageCardProps {

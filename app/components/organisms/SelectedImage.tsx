@@ -4,9 +4,11 @@ import styles from "../styles/SelectedImage.module.css";
 
 interface SelectedImageProps {
   image: {
-    urls: { full: string };
+    id: string;
+    urls: {
+      full: string;
+    };
     alt_description: string;
-    description?: string;
   };
 }
 

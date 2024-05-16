@@ -6,16 +6,15 @@ const UNSPLASH_API_KEY = process.env.UNSPLASH_API_KEY;
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const query = searchParams.get("query") || "random";
+  const imageId = searchParams.get("imageId") || "";
 
   try {
-    const response = await axios.get("https://api.unsplash.com/search/photos", {
+    const response = await axios.get(`https://api.unsplash.com/photos/${imageId}/related`, {
       headers: {
         Authorization: `Client-ID ${UNSPLASH_API_KEY}`,
       },
       params: {
-        query: query,
-        per_page: 30, // 가져올 이미지 수
+        per_page: 10,
       },
     });
 

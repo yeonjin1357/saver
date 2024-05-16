@@ -2,9 +2,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import axios from "axios";
+
+import ImageCard from "./components/molecules/ImageCard";
 import ImageGrid from "./components/organisms/ImageGrid";
 import SelectedImage from "./components/organisms/SelectedImage";
-import axios from "axios";
 import styles from "./styles/page.module.css";
 
 interface Image {
@@ -20,6 +24,8 @@ const HomePage: React.FC = () => {
   const [relatedImages, setRelatedImages] = useState<Image[]>([]);
   const [page, setPage] = useState(1); // 페이지 상태 추가
   const [hasMore, setHasMore] = useState(true); // 더 불러올 이미지가 있는지 여부
+
+  const router = useRouter();
 
   useEffect(() => {
     fetchImages();
@@ -44,20 +50,9 @@ const HomePage: React.FC = () => {
     }
   };
 
-  const handleImageClick = async (image: Image) => {
+  const handleImageClick = (image: Image) => {
     setSelectedImage(image);
-    await fetchRelatedImages(image);
-  };
-
-  const fetchRelatedImages = async (image: Image) => {
-    try {
-      const response = await axios.get("/api/related-images", {
-        params: { query: image.alt_description },
-      });
-      setRelatedImages(response.data);
-    } catch (error) {
-      console.error("Error fetching related images:", error);
-    }
+    router.push(`/pin/${image.id}?image=${encodeURIComponent(JSON.stringify(image))}`);
   };
 
   return (
@@ -68,7 +63,12 @@ const HomePage: React.FC = () => {
         images={selectedImage ? relatedImages : images}
         fetchMoreImages={fetchImages}
         onClick={handleImageClick}
-        hasMore={hasMore} // hasMore 속성 추가
+        hasMore={hasMore}
+        renderImage={(image) => (
+          <Link key={image.id} href={`/pin/${image.id}?image=${encodeURIComponent(JSON.stringify(image))}`}>
+            <ImageCard image={image} onClick={() => {}} />
+          </Link>
+        )}
       />
       <div className={styles.loader}></div>
     </div>

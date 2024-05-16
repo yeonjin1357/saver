@@ -15,13 +15,16 @@ interface ImageGridProps {
   images: Image[];
   fetchMoreImages: () => void;
   onClick: (image: Image) => void;
-  hasMore: boolean; // 더 불러올 이미지가 있는지 여부
+  hasMore: boolean;
+  renderImage?: (image: Image) => React.ReactNode;
 }
 
-const ImageGrid: React.FC<ImageGridProps> = ({ images, fetchMoreImages, onClick, hasMore }) => {
+const ImageGrid: React.FC<ImageGridProps> = ({ images, fetchMoreImages, onClick, hasMore, renderImage }) => {
   useEffect(() => {
     fetchMoreImages();
   }, []); // 빈 배열 추가하여 컴포넌트 마운트 시 한 번만 호출
+
+  console.log(images);
 
   return (
     <InfiniteScroll
@@ -30,11 +33,7 @@ const ImageGrid: React.FC<ImageGridProps> = ({ images, fetchMoreImages, onClick,
       hasMore={hasMore}
       loader={<h4 className={styles.loader}>Loading...</h4>}
     >
-      <div className={styles.grid}>
-        {images.map((image) => (
-          <ImageCard key={uuidv4()} image={image} onClick={onClick} />
-        ))}
-      </div>
+      <div className={styles.grid}>{images.map((image) => (renderImage ? <React.Fragment key={image.id}>{renderImage(image)}</React.Fragment> : <ImageCard key={image.id} image={image} onClick={() => onClick(image)} />))}</div>
     </InfiniteScroll>
   );
 };
