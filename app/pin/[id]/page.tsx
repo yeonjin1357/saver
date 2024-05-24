@@ -26,7 +26,7 @@ const PinPage: React.FC<PinPageProps> = ({ params }) => {
   const { id } = params;
   const searchParams = useSearchParams();
   const imageString = searchParams.get("image");
-  const [selectedImage, setSelectedImage] = useState<Image | null>(imageString ? JSON.parse(decodeURIComponent(imageString)) : null);
+  const [selectedImage, setSelectedImage] = useState<Image | null>(imageString ? JSON.parse(decodeURIComponent(encodeURIComponent(imageString))) : null);
   const [relatedImages, setRelatedImages] = useState<Image[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
