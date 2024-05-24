@@ -1,11 +1,9 @@
 // app/page.tsx
 "use client";
-
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
-
 import ImageCard from "./components/molecules/ImageCard";
 import ImageGrid from "./components/organisms/ImageGrid";
 import SelectedImage from "./components/organisms/SelectedImage";
@@ -13,7 +11,10 @@ import styles from "./styles/page.module.css";
 
 interface Image {
   id: string;
-  urls: { small: string; full: string };
+  urls: {
+    small: string;
+    full: string;
+  };
   alt_description: string;
   description?: string;
 }
@@ -21,10 +22,8 @@ interface Image {
 const HomePage: React.FC = () => {
   const [images, setImages] = useState<Image[]>([]);
   const [selectedImage, setSelectedImage] = useState<Image | null>(null);
-  const [relatedImages, setRelatedImages] = useState<Image[]>([]);
-  const [page, setPage] = useState(1); // 페이지 상태 추가
-  const [hasMore, setHasMore] = useState(true); // 더 불러올 이미지가 있는지 여부
-
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
@@ -32,27 +31,29 @@ const HomePage: React.FC = () => {
   }, []);
 
   const fetchImages = async () => {
-    if (!hasMore) return; // 더 이상 불러올 이미지가 없으면 중단
+    if (!hasMore) return;
 
     try {
       const response = await axios.get("/api/images", {
-        params: { page }, // 페이지 번호를 파라미터로 전달
+        params: {
+          page,
+        },
       });
+
       if (response.data.length === 0) {
-        setHasMore(false); // 불러온 이미지가 없으면 더 이상 요청하지 않음
+        setHasMore(false);
       } else {
         setImages((prevImages) => [...prevImages, ...response.data]);
-        setPage((prevPage) => prevPage + 1); // 페이지 번호 증가
+        setPage((prevPage) => prevPage + 1);
       }
     } catch (error) {
       console.error("Error fetching images:", error);
-      setHasMore(false); // 오류 발생 시 더 이상 요청하지 않음
+      setHasMore(false);
     }
   };
 
   const handleImageClick = (image: Image) => {
-    setSelectedImage(image);
-    router.push(`/pin/${image.id}?image=${encodeURIComponent(JSON.stringify(image))}`);
+    router.push(`/pin/${image.id}`);
   };
 
   return (
@@ -60,12 +61,12 @@ const HomePage: React.FC = () => {
       <h1>Image Gallery</h1>
       {selectedImage && <SelectedImage image={selectedImage} />}
       <ImageGrid
-        images={selectedImage ? relatedImages : images}
+        images={images}
         fetchMoreImages={fetchImages}
         onClick={handleImageClick}
         hasMore={hasMore}
         renderImage={(image) => (
-          <Link key={image.id} href={`/pin/${image.id}?image=${encodeURIComponent(JSON.stringify(image))}`}>
+          <Link key={image.id} href={`/pin/${image.id}`}>
             <ImageCard image={image} onClick={() => {}} />
           </Link>
         )}
